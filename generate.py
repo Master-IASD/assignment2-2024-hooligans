@@ -13,9 +13,6 @@ if __name__ == '__main__':
                       help="The batch size to use for training.")
     args = parser.parse_args()
 
-
-
-
     print('Model Loading...')
     # Model Pipeline
     mnist_dim = 784
@@ -26,8 +23,6 @@ if __name__ == '__main__':
     model.eval()
 
     print('Model loaded.')
-
-
 
     print('Start Generating')
     os.makedirs('samples', exist_ok=True)

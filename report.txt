@@ -1,0 +1,8 @@
+14/10/24
+
+I have successfully installed cuda on the virtual environment, giving access go my GPU.
+
+I have launched the train.py file and it takes 18.74s/it, that is approximately 32 minutes to run. We will need to be smart about training schedules.
+
+I wonder if we can beat this training time on another machine we have access to.
+

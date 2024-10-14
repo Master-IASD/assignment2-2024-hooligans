@@ -6,12 +6,8 @@ from torchvision import datasets, transforms
 import torch.nn as nn
 import torch.optim as optim
 
-
 from model import Generator, Discriminator
 from utils import D_train, G_train, save_models
-
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Normalizing Flow.')
@@ -23,7 +19,6 @@ if __name__ == '__main__':
                         help="Size of mini-batches for SGD")
 
     args = parser.parse_args()
-
 
     os.makedirs('chekpoints', exist_ok=True)
     os.makedirs('data', exist_ok=True)
@@ -55,8 +50,6 @@ if __name__ == '__main__':
     # model = DataParallel(model).cuda()
     print('Model loaded.')
     # Optimizer 
-
-
 
     # define loss
     criterion = nn.BCELoss() 

@@ -1,8 +1,6 @@
 import torch
 import os
 
-
-
 def D_train(x, G, D, D_optimizer, criterion):
     #=======================Train the discriminator=======================#
     D.zero_grad()
@@ -31,7 +29,6 @@ def D_train(x, G, D, D_optimizer, criterion):
         
     return  D_loss.data.item()
 
-
 def G_train(x, G, D, G_optimizer, criterion):
     #=======================Train the generator=======================#
     G.zero_grad()
@@ -49,12 +46,9 @@ def G_train(x, G, D, G_optimizer, criterion):
         
     return G_loss.data.item()
 
-
-
 def save_models(G, D, folder):
     torch.save(G.state_dict(), os.path.join(folder,'G.pth'))
     torch.save(D.state_dict(), os.path.join(folder,'D.pth'))
-
 
 def load_model(G, folder):
     ckpt = torch.load(os.path.join(folder,'G.pth'))
