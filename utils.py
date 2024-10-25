@@ -2,9 +2,8 @@ import torch
 import os
 
 
-
 def D_train(x, G, D, D_optimizer, criterion):
-    #=======================Train the discriminator=======================#
+    # =======================Train the discriminator=======================#
     D.zero_grad()
 
     # train discriminator on real
@@ -19,8 +18,8 @@ def D_train(x, G, D, D_optimizer, criterion):
     z = torch.randn(x.shape[0], 100).cuda()
     x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
 
-    D_output =  D(x_fake)
-    
+    D_output = D(x_fake)
+
     D_fake_loss = criterion(D_output, y_fake)
     D_fake_score = D_output
 
@@ -28,17 +27,17 @@ def D_train(x, G, D, D_optimizer, criterion):
     D_loss = D_real_loss + D_fake_loss
     D_loss.backward()
     D_optimizer.step()
-        
-    return  D_loss.data.item()
+
+    return D_loss.data.item()
 
 
 def G_train(x, G, D, G_optimizer, criterion):
-    #=======================Train the generator=======================#
+    # =======================Train the generator=======================#
     G.zero_grad()
 
     z = torch.randn(x.shape[0], 100).cuda()
     y = torch.ones(x.shape[0], 1).cuda()
-                 
+
     G_output = G(z)
     D_output = D(G_output)
     G_loss = criterion(D_output, y)
@@ -46,17 +45,48 @@ def G_train(x, G, D, G_optimizer, criterion):
     # gradient backprop & optimize ONLY G's parameters
     G_loss.backward()
     G_optimizer.step()
-        
+
     return G_loss.data.item()
 
 
-
 def save_models(G, D, folder):
-    torch.save(G.state_dict(), os.path.join(folder,'G.pth'))
-    torch.save(D.state_dict(), os.path.join(folder,'D.pth'))
+    torch.save(G.state_dict(), os.path.join(folder, "G.pth"))
+    torch.save(D.state_dict(), os.path.join(folder, "D.pth"))
 
 
 def load_model(G, folder):
-    ckpt = torch.load(os.path.join(folder,'G.pth'))
-    G.load_state_dict({k.replace('module.', ''): v for k, v in ckpt.items()})
+    ckpt = torch.load(os.path.join(folder, "G.pth"))
+    G.load_state_dict({k.replace("module.", ""): v for k, v in ckpt.items()})
     return G
+
+
+import os
+from torchvision import datasets, transforms
+from PIL import Image
+
+print("test")
+
+
+def save_mnist_as_png(output_folder, train=True):
+    # Create the folder if it doesn't exist
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Load MNIST dataset
+    dataset = datasets.MNIST(
+        root="./data",
+        train=train,
+        download=True,
+        transform=transforms.Compose([transforms.ToTensor()]),
+    )
+
+    # Iterate over dataset and save each image as a PNG
+    for idx, (img, label) in enumerate(dataset):
+        img = img.squeeze(0)  # Remove channel dimension
+        pil_img = transforms.ToPILImage()(img)  # Convert tensor to PIL Image
+        pil_img.save(f"{output_folder}/image_{idx}.png")
+
+    print(f"Saved {len(dataset)} images to '{output_folder}'.")
+
+
+# Example usage:
+save_mnist_as_png(output_folder="real_mnist_png", train=True)
