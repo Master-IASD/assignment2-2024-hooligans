@@ -1,4 +1,4 @@
 (if not trained) - train the model with python train.py
-- generate images with python generate.py --bacth_size 64
+- generate images with python generate.py --batch_size 64
 - create png real samples with python >> from MMutils import save_mnist_as_png >> save_mnist_as_png("real_samples")
 - compute FID using python -m pytorch_fid .\samples\ .\real_samples\

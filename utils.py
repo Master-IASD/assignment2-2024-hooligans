@@ -1,7 +1,8 @@
 import torch
 import os
+import mlflow
 
-def D_train(x, G, D, D_optimizer, criterion):
+def D_train(x, G, D, D_optimizer, criterion, latent_dim=100):
     #=======================Train the discriminator=======================#
     D.zero_grad()
 
@@ -14,7 +15,7 @@ def D_train(x, G, D, D_optimizer, criterion):
     D_real_score = D_output
 
     # train discriminator on facke
-    z = torch.randn(x.shape[0], 100).cuda()
+    z = torch.randn(x.shape[0], latent_dim).cuda()
     x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
 
     D_output =  D(x_fake)
@@ -29,11 +30,11 @@ def D_train(x, G, D, D_optimizer, criterion):
         
     return  D_loss.data.item()
 
-def G_train(x, G, D, G_optimizer, criterion):
+def G_train(x, G, D, G_optimizer, criterion, latent_dim=100):
     #=======================Train the generator=======================#
     G.zero_grad()
 
-    z = torch.randn(x.shape[0], 100).cuda()
+    z = torch.randn(x.shape[0], latent_dim).cuda()
     y = torch.ones(x.shape[0], 1).cuda()
                  
     G_output = G(z)
@@ -47,10 +48,16 @@ def G_train(x, G, D, G_optimizer, criterion):
     return G_loss.data.item()
 
 def save_models(G, D, folder):
-    torch.save(G.state_dict(), os.path.join(folder,'G.pth'))
-    torch.save(D.state_dict(), os.path.join(folder,'D.pth'))
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    torch.save(G.module.state_dict(), os.path.join(folder,'G.pth'))
+    torch.save(D.module.state_dict(), os.path.join(folder,'D.pth'))
 
-def load_model(G, folder):
-    ckpt = torch.load(os.path.join(folder,'G.pth'))
-    G.load_state_dict({k.replace('module.', ''): v for k, v in ckpt.items()})
-    return G
+# def load_model(G, folder):
+#     ckpt = torch.load(os.path.join(folder,'G.pth'))
+#     G.load_state_dict({k.replace('module.', ''): v for k, v in ckpt.items()})
+#     return G
+
+def load_model(model, folder):
+    model.load_state_dict(torch.load(os.path.join(folder, 'G.pth')))
+    return model
