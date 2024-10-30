@@ -3,7 +3,7 @@ import os
 import numpy as np
 from torchvision import datasets, transforms
 from PIL import Image
-from MMgan import Generator
+#from MMgan import Generator
 import torch.nn.functional as F
 
 
