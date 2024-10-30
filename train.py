@@ -15,9 +15,9 @@ from utils import D_train, G_train, save_models
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Normalizing Flow.')
-    parser.add_argument("--epochs", type=int, default=100,
+    parser.add_argument("--epochs", type=int, default=500,
                         help="Number of epochs for training.")
-    parser.add_argument("--lr", type=float, default=0.0002,
+    parser.add_argument("--lr", type=float, default=0.005,
                       help="The learning rate to use for training.")
     parser.add_argument("--batch_size", type=int, default=64, 
                         help="Size of mini-batches for SGD")
