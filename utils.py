@@ -1,6 +1,5 @@
 import torch
 import os
-import mlflow
 
 def D_train(x, G, D, D_optimizer, criterion, latent_dim=100):
     #=======================Train the discriminator=======================#
