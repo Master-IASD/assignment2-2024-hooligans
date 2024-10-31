@@ -15,7 +15,8 @@ if __name__ == '__main__':
     parser.add_argument("--latent_dim", type=int, default=100,
                         help="Dimensionality of the latent space.")
     args = parser.parse_args()
-    latent_dim = args.latent_dim
+    #latent_dim = args.latent_dim
+    latent_dim = 200
     print('Model Loading...')
     # Model Pipeline
     mnist_dim = 784
