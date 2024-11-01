@@ -1,8 +1,5 @@
-import time
 import torch
-import torchvision
 import os
-import numpy as np
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 d = 100  # dimension of latent space
@@ -90,11 +87,13 @@ def save_models(G, D, GaussianM, folder):
     torch.save(GaussianM.state_dict(), os.path.join(folder, "GaussMixt.pth"))
 
 
-def load_model(G, GaussianM, folder, Discriminator = None):
+def load_model(G, GaussianM, folder, Discriminator=None):
     ckpt_G = torch.load(os.path.join(folder, "G.pth"))
     ckpt_GM = torch.load(os.path.join(folder, "GaussMixt.pth"))
     G.load_state_dict({k.replace("module.", ""): v for k, v in ckpt_G.items()})
     GaussianM.load_state_dict({k.replace("module.", ""): v for k, v in ckpt_GM.items()})
-    if not Discriminator == None :
+    if not Discriminator == None:
         ckpt_D = torch.load(os.path.join(folder, "D.pth"))
-        Discriminator.load_state_dict({k.replace("module.", ""): v for k, v in ckpt_D.items()})
+        Discriminator.load_state_dict(
+            {k.replace("module.", ""): v for k, v in ckpt_D.items()}
+        )
