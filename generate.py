@@ -15,7 +15,7 @@ if __name__ == "__main__":
         default=2048,
         help="The batch size to use for training.",
     )
-    parser.add_argument("--model", type=str, default="checkpoints200")
+    parser.add_argument("--model", type=str, default="GMGAN/checkpoints200")
 
     parser.add_argument("--d", type=int, default=100, help="latent space dimension")
 
