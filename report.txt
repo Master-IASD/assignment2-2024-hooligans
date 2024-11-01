@@ -6,3 +6,20 @@ I have launched the train.py file and it takes 18.74s/it, that is approximately 
 
 I wonder if we can beat this training time on another machine we have access to.
 
+
+01/11/24
+
+Last day I plotted the distribution of classes in my Vanilla GAN. Vanilla GANs do not like 2s.
+I also made a 2d representation of samples built with vanilla GAN and latent_dim = 200. There is some overlap for pairs 4/9 and 3/5, and the 2s are not really clustered.
+
+I also plotted real mnist 2d representation, which is has a better separation, but the fact that the distribution is more balanced might have something to do with it.
+
+For the GM Samples, the class distribution is way more balanced.
+The 2d clusters are well separated, and some of them are really close and similar to the 2d representation of real samples.
+
+Today, we won 1 FID with my vanilla gan run with latent_dim=200
+
+I made a script to get separate FID for each class.
+It is hard to interpret. Somehow, the FID values seem a bit high compared to the global fid values (link with the distribution?).
+But it shows which classes are better separated with the GM approach : all classes except 9, and 2s in particular are way more similar in their distribution to real samples.
+Surprisingly, however, the 9s have decreased a bit in FID with the GM approach.
