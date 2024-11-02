@@ -1,7 +1,7 @@
 import torch
 import os
 
-def D_train(x, G, D, D_optimizer, criterion, latent_dim=100):
+def D_train(x, G, D, D_optimizer, criterion, latent_dim=200):
     #=======================Train the discriminator=======================#
     D.zero_grad()
 
@@ -29,7 +29,7 @@ def D_train(x, G, D, D_optimizer, criterion, latent_dim=100):
         
     return  D_loss.data.item()
 
-def G_train(x, G, D, G_optimizer, criterion, latent_dim=100):
+def G_train(x, G, D, G_optimizer, criterion, latent_dim=200):
     #=======================Train the generator=======================#
     G.zero_grad()
 
@@ -60,3 +60,25 @@ def save_models(G, D, folder):
 def load_model(model, folder):
     model.load_state_dict(torch.load(os.path.join(folder, 'G.pth')))
     return model
+
+
+def GM_trick_batch(batch_size, K, d, sigma, c):
+    alpha = 1 / K
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    Sigma = sigma * torch.eye(d, device=device)  # (d, d)
+    mu = torch.empty(K, d, device=device).uniform_(-c, c)  # (K, d)
+    mvn = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=Sigma)
+    z = mvn.sample((batch_size,))  # z.shape = (batch_size, K, d)
+    z = alpha * z.sum(dim=1)  # Sum over K components
+    return z  # Shape: (batch_size, d)
+
+def G_train_fixed_GM(x, G, D, G_optimizer, criterion, K, sigma, c, latent_dim=200):
+    G.zero_grad()
+    z = GM_trick_batch(x.shape[0], K, latent_dim, sigma, c)
+    y = torch.ones(x.shape[0], 1, device=z.device)
+    G_output = G(z)
+    D_output = D(G_output)
+    G_loss = criterion(D_output, y)
+    G_loss.backward()
+    G_optimizer.step()
+    return G_loss.item()

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class Generator(nn.Module):
-    def __init__(self, g_output_dim, latent_dim=100):
+    def __init__(self, g_output_dim, latent_dim=200):
         super(Generator, self).__init__()       
         self.fc1 = nn.Linear(latent_dim, 256)
         self.fc2 = nn.Linear(self.fc1.out_features, self.fc1.out_features*2)
