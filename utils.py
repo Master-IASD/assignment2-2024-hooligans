@@ -1,52 +1,85 @@
 import torch
+import torchvision
 import os
+import numpy as np
+import torch.nn as nn
+
+d = 100 #dimension of latent space
+K = 11 #size of the output of discrimnator
 
 
-
-def D_train(x, G, D, D_optimizer, criterion):
+def D_train(x, y, G, D, GaussianM, D_optimizer, criterion):
     #=======================Train the discriminator=======================#
+    G.train()
+    D.train()
     D.zero_grad()
 
-    # train discriminator on real
-    x_real, y_real = x, torch.ones(x.shape[0], 1)
+
+    # train discriminator on real samples
+    x_real, y_real = x, y
     x_real, y_real = x_real.cuda(), y_real.cuda()
 
-    D_output = D(x_real)
-    D_real_loss = criterion(D_output, y_real)
-    D_real_score = D_output
+    D_output_real = D(x_real)
+    D_real_loss = criterion(D_output_real, y_real)
 
-    # train discriminator on facke
-    z = torch.randn(x.shape[0], 100).cuda()
-    x_fake, y_fake = G(z), torch.zeros(x.shape[0], 1).cuda()
+    #representing one of the K Gaussian distributions
+    k_values = torch.randint(0, 10, (x.shape[0],))
+    y = torch.eye(K)[k_values].cuda()
+    N = torch.distributions.MultivariateNormal(torch.zeros(d), torch.eye(d))
 
-    D_output =  D(x_fake)
-    
-    D_fake_loss = criterion(D_output, y_fake)
-    D_fake_score = D_output
+    #random noise
+    z = N.sample((x.shape[0],)).cuda().to(torch.float32)
 
-    # gradient backprop & optimize ONLY D's parameters
+    #the vector of latent space sampled from the Gaussian Mixture
+    z_tilde = GaussianM(y, z)
+
+    #Generate fake sample x_fake
+    x_fake = G(z_tilde)
+
+    D_output_fake =  D(x_fake)
+    target_fake = torch.full((x.shape[0],), 10, dtype=torch.long).cuda()
+
+    D_fake_loss = criterion(D_output_fake, target_fake)
+
+    # gradient backpropagation and optimization of D's parameters
     D_loss = D_real_loss + D_fake_loss
     D_loss.backward()
     D_optimizer.step()
-        
+
     return  D_loss.data.item()
 
 
-def G_train(x, G, D, G_optimizer, criterion):
+
+
+def G_train(x, y, G, D, GaussianM, G_optimizer, criterion):
     #=======================Train the generator=======================#
+    G.train()
+    D.train()
     G.zero_grad()
 
-    z = torch.randn(x.shape[0], 100).cuda()
-    y = torch.ones(x.shape[0], 1).cuda()
-                 
-    G_output = G(z)
-    D_output = D(G_output)
-    G_loss = criterion(D_output, y)
 
-    # gradient backprop & optimize ONLY G's parameters
+
+    #representing one of the K Gaussian distributions
+    k_values = torch.randint(0, 10, (x.shape[0],))
+    y = torch.eye(K)[k_values].cuda()
+    N = torch.distributions.MultivariateNormal(torch.zeros(d), torch.eye(d))
+    #random noise
+    z = N.sample((x.shape[0],)).cuda().to(torch.float32)
+
+    #the vector of latent space sampled from the Gaussian Mixture
+    z_tilde = GaussianM(y, z)
+
+    G_output = G(z_tilde)
+
+    D_output = D(G_output)
+    G_loss = criterion(D_output, torch.argmax(y, dim=1)) 
+
+    # gradient backpropagation and optimization of G and GM's parameters
     G_loss.backward()
     G_optimizer.step()
-        
+    #GM is an extension of two layers of the generator
+
+
     return G_loss.data.item()
 
 
