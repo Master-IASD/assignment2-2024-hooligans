@@ -6,7 +6,7 @@ import argparse
 
 
 from model import Generator
-from utils import load_model
+from utils import load_model, GM_trick_batch
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate Normalizing Flow.')
@@ -17,11 +17,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
     #latent_dim = args.latent_dim
     latent_dim = 200
+    sigma = 1
+    c = 10
+    K = 10
     print('Model Loading...')
     # Model Pipeline
     mnist_dim = 784
     model = Generator(g_output_dim = mnist_dim, latent_dim=latent_dim).cuda()
-    model = load_model(model, f'fixed_GM_checkpoints/d=200_c=1_K=10_sigma=1')
+    model = load_model(model, f'fixed_GM_checkpoints/d=200_c=10_K=10_sigma=1')
     model = torch.nn.DataParallel(model).cuda()
     model.eval()
 
@@ -36,7 +39,8 @@ if __name__ == '__main__':
     n_samples = 0
     with torch.no_grad():
         while n_samples<10000:
-            z = torch.randn(args.batch_size, latent_dim).cuda()
+            #z = torch.randn(args.batch_size, latent_dim).cuda()
+            z = GM_trick_batch(args.batch_size, K, latent_dim, sigma, c)
             x = model(z)
             x = x.reshape(args.batch_size, 28, 28)
             for k in range(x.shape[0]):
