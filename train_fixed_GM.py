@@ -49,7 +49,7 @@ if __name__ == '__main__':
     mnist_dim = 784
     G = torch.nn.DataParallel(Generator(g_output_dim = mnist_dim, latent_dim=latent_dim)).cuda()
     D = torch.nn.DataParallel(Discriminator(mnist_dim)).cuda()
-    K = 10
+    K = 1
     sigma = 1
     c = 10
 
