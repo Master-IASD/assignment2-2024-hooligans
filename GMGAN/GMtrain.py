@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # K= size of the output of discrimnator
     K = args.K
     d = args.d
-    G = Generator(g_output_dim=mnist_dim)
+    G = Generator(mnist_dim, d)
     D = Discriminator(mnist_dim, K)
     GM = GaussianM(K, d)
     if args.model:
@@ -100,7 +100,7 @@ if __name__ == "__main__":
         for batch_idx, (x, y) in enumerate(train_loader):
             x = x.view(-1, mnist_dim)
             dl += D_train(x, y, G, D, GM, D_optimizer, criterion)
-            gl += G_train(x, y, G, D, GM, G_optimizer, GM_optimizer, criterion)
+            gl += G_train(x, G, D, GM, G_optimizer, GM_optimizer, criterion)
             n_batch += 1
         print(f"Epoch {epoch}, loss D : {dl/n_batch}, lossG : {gl/n_batch}")
 
@@ -128,6 +128,6 @@ if __name__ == "__main__":
                 text=True,
             )
 
-            print(f"Epoch {epoch}, FID: {fid.stdout:.2f}")
+            print(f"Epoch {epoch}, FID: {fid.stdout}")
 
     print("Training done")

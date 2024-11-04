@@ -20,11 +20,11 @@ def D_train(x, y, G, D, GM, D_optimizer, criterion):
     D_real_loss = criterion(D_output_real, y_real)
 
     k_values = torch.randint(0, K, (x.shape[0],), device=DEVICE)
-    y = F.one_hot(k_values, num_classes=K).to(DEVICE).float()
+    y_sampled = F.one_hot(k_values, num_classes=K).to(DEVICE).float()
     z = torch.randn(x.shape[0], d, device=DEVICE, dtype=torch.float32)
 
     # the vector of latent space sampled from the Gaussian Mixture
-    z_tilde = GM(y, z)
+    z_tilde = GM(y_sampled, z)
 
     # Generate fake sample x_fake
     x_fake = G(z_tilde)
