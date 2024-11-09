@@ -1,0 +1,178 @@
+\documentclass[10pt]{article}
+
+% Packages for encoding, graphics, and math
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+
+% Packages for captions and subfigures
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Package for tables
+\usepackage{booktabs}
+
+% Package for controlling float placement
+\usepackage{float}
+
+% Packages for bibliography and hyperlinks
+\usepackage{natbib}
+\usepackage{hyperref}
+
+% Title, author, and date information
+\title{DS LAB 2}
+\author{Alexandre OLECH}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Latent space modeling with a Gaussian Mixture}
+\subsection{General motivation}
+This section presents a series of experiments aiming at performing latent space modeling. Within the vanilla GAN framework (by which we mean the initial version of the GAN provided to us for the DS LAB second project), during image generation, the generator takes a variable $z$ as input, which is sampled from a random multivariate gaussian distribution, and returns an image $x$. Once such a GAN has been trained, the first idea is to “invert” the generation process on real images, that is, for each real image $x$, to find the best value of $z$ such that $G(z)$ is very close to $x$. Then, we obtain a set of values $z_{real}$ that can be seen as the pseudo-inverses $G^-1(x)$ for each real image $x$.
+
+Then, the second idea is to sample from the distribution of $z_{real}$, and to see if it improves the diversity and quality of the image generation. For that, we need to build a probability distribution that corresponds to the observed distribution $z_{real}$. Since this distribution may be more sparse and more complex than a gaussian, it sounds promising to model it as a gaussian mixture model. As suggested by \citep{ref_key}, this can be done, for example, using the Expectation Maximization (EM) Algorithm.
+
+\subsection{Inverting the generation process of a basic trained GAN}
+
+\subsubsection{“Inversion” through gradient descent}
+
+To invert the generative process for each real image $x$, we defined a simple loss function, which expresses the distance between $x$ and $G(z)$ with the l2-norm :
+
+\[
+L(z) = \| x - G(z) \|_2
+\]
+
+For each real image $x_{i}$, we initialized and updated $z$ with 1000 iterations of gradient descent in order to reduce the loss (we made sure that the gradients of the generator were not updated, since the goal was to optimize $z$ for a fixed generator). We then stored the obtained value $z_{i}$.
+
+\subsubsection{Visualizing the regenerated real images}
+
+The defined loss is likely to not be convex, due to the fact that $G$ is a neural network with feed-forward layers, which usually does not result in a convex function. Thus, reducing the loss might not lead to a global minimizer.
+
+However, the comparison (Figure~\ref{fig:fig_1}) between real images $x_{i}$ and the regenerated images $G(z_{i})$ shows that, when we pick 20 random pairs of images at random, the regenerated images are very similar to the original, and the classes always seem to match. Thus the optimization succeeds at finding points in the latent space that correspond to a specific class of number with a specific appearance.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_1_sample_comparison.png} % Replace 'example-image' with your image file name
+\caption{Comparison between real images $x_{i}$ (up) and regenerated images $G(z_{i})$ (down) for 10 random (uniformly drawn) pairs. The $z_i$ were obtained by inverting the generation process for each real image $x_i$.}
+\label{fig:fig_1}
+\end{figure}
+
+\subsection{Modeling the latent space of real images : Gaussian Mixture with the Expectation Maximization algorithm}
+
+As suggested by \citep{ref_key}, fitting a Gaussian Mixture to a set of points can be done with the Expectation Maximization (EM) Algorithm.
+
+We implemented this approach with the sklearn \textit{GaussianMixture} class, and we created an MLflow experiment to track the FID results associated to sampling from this Gaussian Mixture.
+
+We then experimented different values for the number of components in the Gaussian Mixture. The relation with the corresponding FID values can be visualized in Figure~\ref{fig:fig_2}. The FID globally decreases from 0 to 10, and then starts increasing again, with the exception of the value 17, which gives the lowest FID. Of course, this lowest value of 17 may be due to randomness and sampling more runs would be needed to get a more complete picture of the relation. With a number of components equal to 10, the idea that the distribution has one cluster per class would be a possible plausible scenario.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_2_n_comp_and_FID.png}
+\caption{Relation between the number of components in the Gaussian Mixture fitted to the reconstructed latent space and the FID obtained from resampling from this distribution.}
+\label{fig:fig_2}
+\end{figure}
+
+
+\subsection{Performance of resampling synthetic images from the modeled distributions}
+
+Write this part with the platform results of the EM model.
+
+
+\section{Interpretative stance on the image generation improvements induced by our best architecture (Dynamic GM GAN with supervision)}
+
+\subsection{Motivation}
+
+The goal of this section is to compare our most promising model (Dynamic GM GAN with supervision) to a baseline, simple model, with the idea of checking the results on the different metrics, and understanding how they translate to the quality and the diversity of the generated images.
+
+\subsection{Training a baseline model for the comparison}
+
+When building complex models, we believe that it is always a good practice, in machine learning, to justify the use of these more complex models by showing that they outperform a tuned version of a simpler model. This is not always done in practice, but we believe it is important, because most of the time, a simpler model is usually preferable to a more complex model when the performance gain is not significant, for a variety of reasons (energy consumption, implementation time, inference time, debugging cost, etc).
+
+Thus we allocated time to tuning the some hyper-parameters of the Vanilla Gan to have a tuned baseline. In particular, we created an MLflow experiment to look for the best value of the dimension of the space on which $z$ is sampled before being used as input to the generator. The results of this experiment can be visualized in Figure~\ref{fig:fig_3}. They suggest that the best value for this dimension of the latent space is to be found around 200. We thus used this configuration as our baseline model.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_3_latent_dim_tuning_vanilla_GAN_zoomed.png}
+\caption{Relation between the dimension of the latent space and FID for the vanilla GAN.}
+\label{fig:fig_3}
+\end{figure}
+
+\subsection{Improvements on the three metrics (FID, precision, recall)}
+
+Comparing our most promising model to the tuned baseline, using the values obtained with the DSLab platform for both. The results can be visualized in Table~\ref{tab:table_1}. They indicate that our best model leads to significant improvements on all of the three considered metrics : lower FID, higher precision and higher recall.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of our most promising model with a tuned simpler baseline model. Results were obtained with the DS Lab evaluation platform.}
+\label{tab:table_1}
+\begin{tabular}{lccc}
+\toprule
+\textbf{} & \textbf{FID} & \textbf{Precision} & \textbf{Recall} \\
+\midrule
+
+Tuned baseline (Vanilla GAN with d=200) & 27.73 & 0.52 & 0.2 \\
+
+Supervised Dynamic GM GAN & 15.67 & 0.55 &  0.29 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Improvements on image generation}
+
+We have shown in the previous section that our best model outperforms the baseline in all of the three considered metrics. Now, we ask the following questions : how does this translate to image generation ? On what aspect are the generated images better, in terms of quality and diversity ? How can we explain such qualitative improvements by considering the architecture of the GM Dynamic Supervised GAN ?
+\subsubsection{Training a ResNet classifier on MNIST to infer the labels of generated samples}
+
+To interpret the improvements induced by our best model, we wanted to have labels of the generated digits at our disposal. Since the generated images do not come with a label (or at least for not all of the models we wanted to compare), we had to do infer the classes with a classifier trained on the MNIST dataset. We thus trained such a model.
+
+Of course, this approach has its limits because it relies on the quality of the generated images and on the performance of the classifier. If the images are of low quality, or if the classifier struggles too much in classifying images, we will usually not get meaningful labels for the generated images, and it might be difficult to infer the quality of image generation from such an approach in such context. However, for the MNIST dataset, the data is of reasonably good quality (it is relatively well annotated and most numbers are easily distinguishable for humans) and state of the art classifiers are known to easily achieve 0.99 accuracy nowadays. Thus we thought that such an approach could prove interesting to have some idea concerning the labels of our generated images, which have reasonable quality.
+
+\subsubsection{Visualization with the inferred labels}
+
+With these inferred labels, we were able to implement three types of visualizations that compare our baseline with our best model in terms of generated images . Figure~\ref{fig:fig_4} displays samples with the inferred labels. Figure~\ref{fig:fig_5} displays the distribution of (inferred) classes. Figure~\ref{fig:fig_6} displays TSNE representations of samples.
+
+We will use these visualizations in the analyses of the two next sub-subsections.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_4_samples_comparison.png}
+\caption{Generated digits with the baseline model (left) and our best model (right).}
+\label{fig:fig_4}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_5_distributions_comparison.png}
+\caption{Distribution of (inferred) classes in the digits obtained with the baseline model (left) and with our best model (right).}
+\label{fig:fig_5}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{Fig_6_tsne_comparisons.png}
+\caption{TSNE representations of the digits colored with the classes (for real MNIST data) or the inferred classes (for the generated digits of the baseline and of our best model). The vanilla model corresponds to the left plot, the real MNIST images to the second plot and our best GM model corresponds to the right plot.}
+\label{fig:fig_6}
+\end{figure}
+
+
+\subsubsection{Improved inter-class diversity}
+
+As can be seen in Figure~\ref{fig:fig_5}, our baseline model has a strong bias towards specific classes in the generated digits. It has a very low probability of generating the digit 2, for instance. When we look at the TSNE representation of the baseline digits, using Figure~\ref{fig:fig_6}, we find that there is no visible cluster for this digit, whereas other others, such as the digit 0, have a well-separated cluster and a more important probability of being generated. The number 1 has the biggest probability of being generated, and it also has the biggest cluster in the TSNE plot, compared to other digits. A very plausible explanation is that the baseline model has become bad at generating the digit 2, but became decent at generating the digit other numbers, such that the digit 1, for instance, and thus focuses on such digits to better fool the discriminator. Since the loss of the baseline model only incites the generator to fool the discriminator, independently of the class, the generator may completely ignore one class, and prefer to favor other classes, which explains the situation we observe here.
+
+For the GM model, looking at the distribution of classes in Figure~\ref{fig:fig_5}, we see that it is not biased towards a specific class. The explanation likely comes from the fact that this supervised dynamic GM GAN has a different loss, which enforces that the generator improves at generating real-looking digits of a specific class, for each class. Thus it cannot adopt strategies that consist in focusing on specific digits and ignoring others. As a result, it is forced to search for a fitting sub-space for each number.
+
+This property of the GM GAN results in more inter-class diversity in the generated images.
+
+\subsubsection{Improved quality for each class of images}
+
+The baseline model has a tendency to generate hybrid numbers, as can be seen in Figure~\ref{fig:fig_4}. For instance, the digits in position (2,5) and (5,6) on the left side of the figure look both like 4 and like 9. Furthermore, when we look at the points of classes 4 and 9 in Figure~\ref{fig:fig_6}, we see that these two digits share common region together. In practice, such images are likely to be good for fooling the discriminator, because they take advantage of looking both like 4 and like 9, thus potentially adding up the realistic-ness associated to the two. But in practice, such hybrids are low quality, since humans usually do not write 4 that look like 9 and vice versa. This is particularly true for the images where it looks like the a small part of the 9 was removed in the top when writing the number, but this does not correspond to an actual writing pattern in terms of writing movements.
+
+In the GM model, the classes clusters in the TSNE are well separated and we do not observe such hybrid numbers. This is due to the fact that it explicitly models the multimodal distribution of the data, where each class is represented by a single mode. As a result, this enhances class-specific features in the generated digits, which leads to clearer separation of classes and thus to an improvement in quality.
+
+% Bibliography
+\bibliographystyle{plainnat}
+\bibliography{references} % 'references.bib' is the name of your bibliography file
+
+\end{document}

@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/iasd/dslab/p2/assignment2-2024-hooligans/mlruns/artifacts/42fb2aea5674438bbf7549594ac1576c/artifacts
+end_time: 1731146131048
+entry_point_name: ''
+experiment_id: '146879033756203604'
+lifecycle_stage: active
+run_id: 42fb2aea5674438bbf7549594ac1576c
+run_name: n_components_15
+run_uuid: 42fb2aea5674438bbf7549594ac1576c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1731145995821
+status: 3
+tags: []
+user_id: PC
