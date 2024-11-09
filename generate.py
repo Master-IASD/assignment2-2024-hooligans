@@ -59,7 +59,7 @@ if __name__ == '__main__':
             for i in range(current_batch_size):
                 torchvision.utils.save_image(
                     x[i], 
-                    os.path.join('EM_GM_samples', f'{n_samples_generated + i}.png')
+                    os.path.join('samples', f'{n_samples_generated + i}.png')
                 )
             
             n_samples_generated += current_batch_size
